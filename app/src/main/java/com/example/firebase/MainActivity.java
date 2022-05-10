@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -15,8 +16,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -97,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         ProgressDialog dialog = new ProgressDialog(this);
         dialog.setTitle("File Uploader");
         dialog.show();
+
         name = (EditText) findViewById(R.id.txtname);
         phone = (EditText) findViewById(R.id.txtphone);
         address = (EditText) findViewById(R.id.txtaddress);
@@ -108,15 +113,34 @@ public class MainActivity extends AppCompatActivity {
         uploader.putFile(filepath)
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot)
+                    {
+                        uploader.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @SuppressLint("ResourceType")
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                FirebaseDatabase db = FirebaseDatabase.getInstance();
+                                DatabaseReference root = db.getReference("users");
 
+                                dataholder obj = new dataholder(name.getText().toString(),phone.getText().toString(),address.getText().toString(),price.getText().toString(),trans.getText().toString(),uri.toString());
+                                root.child(phone.getText().toString()).setValue(obj);
+
+                                name.setText("");
+                                phone.setText("");
+                                trans.setText("");
+                                address.setText("");
+                                price.setText("");
+                                img.setImageResource(R.id.imageView);
+                                Toast.makeText(getApplicationContext(),"Uploaded",Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
                 })
                 .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot)
                     {
-
+                        dialog.setMessage("Uploaded");
                     }
                 });
     }

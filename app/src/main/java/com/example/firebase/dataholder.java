@@ -1,7 +1,7 @@
 package com.example.firebase;
 
 public class dataholder {
-    public dataholder(String name, String phone, String address, String price, String trans) {
+    public dataholder(String s, String name, String phone, String address, String price, String trans) {
         this.name = name;
         this.phone = phone;
         this.address = address;
