@@ -1,15 +1,15 @@
 package com.example.firebase;
 
-public class dataholder {
-    public dataholder(String s, String name, String phone, String address, String price, String trans) {
+public class dataholder
+{
+        String name,trans,address,price;
+
+    public dataholder(String name, String trans, String address,String price,String s) {
         this.name = name;
-        this.phone = phone;
+        this.trans = trans;
         this.address = address;
         this.price = price;
-        this.trans = trans;
     }
-
-    String name;
 
     public String getName() {
         return name;
@@ -19,12 +19,12 @@ public class dataholder {
         this.name = name;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getTrans() {
+        return trans;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setTrans(String trans) {
+        this.trans = trans;
     }
 
     public String getAddress() {
@@ -42,17 +42,5 @@ public class dataholder {
     public void setPrice(String price) {
         this.price = price;
     }
-
-    public String getTrans() {
-        return trans;
-    }
-
-    public void setTrans(String trans) {
-        this.trans = trans;
-    }
-
-    String phone;
-    String address;
-    String price;
-    String trans;
 }
+

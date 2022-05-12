@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -34,7 +35,6 @@ import com.karumi.dexter.listener.single.PermissionListener;
 
 import java.io.InputStream;
 import java.util.Random;
-
 public class MainActivity extends AppCompatActivity {
     EditText name,phone,address,trans,price ;
     Button add,register;
@@ -43,18 +43,13 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap; // used for allow us to manipulate pixels of image
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         img = (ImageView) findViewById(R.id.imageView);
         add = (Button) findViewById(R.id.btnadd);
         register = (Button) findViewById(R.id.btnregister);
-        name = (EditText) findViewById(R.id.txtname);
-        phone = (EditText) findViewById(R.id.txtphone);
-        address = (EditText) findViewById(R.id.txtaddress);
-        trans = (EditText) findViewById(R.id.txttrans);
-        price = (EditText) findViewById(R.id.txtprice);
 
         add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,59 +86,69 @@ public class MainActivity extends AppCompatActivity {
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                uploadtofirebase();
+
+                //  here we are having many items to insert in firebase,so to insert them all at once we have to creat a class to hold the all items into an single object to insert data easily
+
+                try {
+
+                  ProgressDialog dialog = new ProgressDialog(MainActivity.this);
+                 dialog.setTitle("File Uploading");
+                 dialog.show();
+
+                    name = (EditText) findViewById(R.id.txtname);
+                    phone = (EditText) findViewById(R.id.txtphone);
+                    address = (EditText) findViewById(R.id.txtaddress);
+                    trans = (EditText) findViewById(R.id.txttrans);
+                    price = (EditText) findViewById(R.id.txtprice);
+
+
+                    FirebaseStorage storage = FirebaseStorage.getInstance();   // for image purpose
+                    StorageReference uploader = storage.getReference("image1" + new Random().nextInt(1000000));
+                    uploader.putFile(filepath)  //to insert image
+
+                            .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {  //if image added successfully
+                                @Override
+                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {//downloading url to paste it in realtime database
+                                    uploader.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                        @SuppressLint("ResourceType")
+
+                                        @Override
+                                        public void onSuccess(Uri uri) {
+
+                                            dialog.dismiss();
+                                            FirebaseDatabase db = FirebaseDatabase.getInstance();
+                                            DatabaseReference root = db.getReference("users");
+
+                                            dataholder obj = new dataholder(name.getText().toString(), trans.getText().toString(), address.getText().toString(), price.getText().toString().trim(), uri.toString());
+                                            root.child(phone.getText().toString()).setValue(obj);
+
+                                            name.setText("");
+                                            phone.setText("");
+                                            trans.setText("");
+                                            address.setText("");
+                                            price.setText("");
+                                            img.setImageResource(R.drawable.ic_launcher_foreground);
+                                            Toast.makeText(getApplicationContext(), "Uploaded", Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                                }
+                            })
+                            .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot) {
+                                     dialog.setMessage("File Uploading...");
+
+                                }
+                            });
+                } catch (Exception e) {
+
+                }
+
             }
+
         });
-    }
+     }
 
-    private void uploadtofirebase()  // here we are having many items to insert in firebase,so to insert them all at once we have to creat a class to hold the all items into an single object to insert data easily
-    {
-        ProgressDialog dialog = new ProgressDialog(this);
-        dialog.setTitle("File Uploader");
-        dialog.show();
-
-        name = (EditText) findViewById(R.id.txtname);
-        phone = (EditText) findViewById(R.id.txtphone);
-        address = (EditText) findViewById(R.id.txtaddress);
-        trans = (EditText) findViewById(R.id.txttrans);
-        price = (EditText) findViewById(R.id.txtprice);
-
-        FirebaseStorage storage = FirebaseStorage.getInstance();   // for image purpose
-        StorageReference uploader = storage.getReference("image1"+new Random().nextInt(1000000));
-        uploader.putFile(filepath)
-                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot)
-                    {
-                        uploader.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                            @SuppressLint("ResourceType")
-                            @Override
-                            public void onSuccess(Uri uri) {
-                                FirebaseDatabase db = FirebaseDatabase.getInstance();
-                                DatabaseReference root = db.getReference("users");
-
-                                dataholder obj = new dataholder(name.getText().toString(),phone.getText().toString(),address.getText().toString(),price.getText().toString(),trans.getText().toString(),uri.toString());
-                                root.child(phone.getText().toString()).setValue(obj);
-
-                                name.setText("");
-                                phone.setText("");
-                                trans.setText("");
-                                address.setText("");
-                                price.setText("");
-                                img.setImageResource(R.id.imageView);
-                                Toast.makeText(getApplicationContext(),"Uploaded",Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-                })
-                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onProgress(@NonNull UploadTask.TaskSnapshot snapshot)
-                    {
-                        dialog.setMessage("Uploaded");
-                    }
-                });
-    }
 
 
     @Override
